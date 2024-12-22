@@ -1,0 +1,19 @@
+{
+    "limits": {
+        "name": 32,
+        "message": 640
+    },
+    "commands": {
+        "name": {
+            "usage": "/name <new name>"
+        },
+        "agent": {
+            "usage": "/agent <agent type>",
+            "available": ["bonzi", "clippy", "peedy"]
+        }
+    },
+    "agents": {
+        "available": ["bonzi", "clippy", "peedy"],
+        "default": "bonzi"
+    }
+} 

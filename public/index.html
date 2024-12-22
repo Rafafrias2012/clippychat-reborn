@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ClippyChat Reborn</title>
+    <link rel="stylesheet" href="https://unpkg.com/98.css">
+    <link rel="stylesheet" href="style.css">
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://code.createjs.com/1.0.0/easeljs.min.js"></script>
+</head>
+<body>
+    <div class="window draggable" id="login-screen">
+        <div class="title-bar">
+            <div class="title-bar-text">Login to ClippyChat</div>
+            <div class="title-bar-controls">
+                <button aria-label="Minimize"></button>
+                <button aria-label="Maximize"></button>
+                <button aria-label="Close"></button>
+            </div>
+        </div>
+        <div class="window-body">
+            <div class="field-row">
+                <label for="nickname">Nickname:</label>
+                <input type="text" id="nickname" placeholder="Enter nickname" maxlength="32">
+            </div>
+            <div class="field-row">
+                <label for="room">Room:</label>
+                <input type="text" id="room" placeholder="Enter room name" value="default">
+            </div>
+            <div class="form-group">
+                <label for="agent">Agent:</label>
+                <select id="agent">
+                    <option value="random">Random</option>
+                    <option value="bonzi">Bonzi</option>
+                    <option value="clippy">Clippy</option>
+                    <option value="peedy">Peedy</option>
+                </select>
+            </div>
+            <div class="field-row">
+                <button onclick="login()">Join Chat</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="chat-screen" style="display: none;">
+        <canvas id="mainCanvas"></canvas>
+        <div class="window" id="taskbar">
+            <div class="window-body">
+                <div class="field-row">
+                    <input type="text" id="chatbar" placeholder="Type a message..." maxlength="640">
+                    <button onclick="sendMessage()">Send</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="window.js"></script>
+    <script src="msagent.js"></script>
+    <script src="script.js"></script>
+</body>
+</html> 
