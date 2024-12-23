@@ -4,6 +4,7 @@
     <title>ClippyChat Reborn</title>
     <link rel="stylesheet" href="https://unpkg.com/98.css">
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="disconnect.css">
     <script src="/socket.io/socket.io.js"></script>
     <script src="https://code.createjs.com/1.0.0/easeljs.min.js"></script>
 </head>
@@ -42,6 +43,10 @@
     </div>
 
     <div id="chat-screen" style="display: none;">
+        <div class="menu-bar">
+            <button id="chat-log-btn" class="menu-btn">☰</button>
+            <button id="admin-login-btn" class="menu-btn" style="float: right;">Admin Login</button>
+        </div>
         <canvas id="mainCanvas"></canvas>
         <div class="window" id="taskbar">
             <div class="window-body">
@@ -53,8 +58,82 @@
         </div>
     </div>
 
+    <!-- Chat Log Window -->
+    <div class="window" id="chat-log-window" style="display: none;">
+        <div class="title-bar">
+            <div class="title-bar-text">Chat Log</div>
+            <div class="title-bar-controls">
+                <button aria-label="Minimize"></button>
+                <button aria-label="Maximize"></button>
+                <button aria-label="Close" onclick="toggleChatLog()"></button>
+            </div>
+        </div>
+        <div class="window-body">
+            <div id="chat-log-content"></div>
+        </div>
+    </div>
+
+    <!-- Admin Login Window -->
+    <div class="window" id="admin-login-window" style="display: none;">
+        <div class="title-bar">
+            <div class="title-bar-text">Admin Login</div>
+            <div class="title-bar-controls">
+                <button aria-label="Close" onclick="toggleAdminLogin()"></button>
+            </div>
+        </div>
+        <div class="window-body">
+            <div class="field-row">
+                <label>Password:</label>
+                <input type="password" id="admin-password">
+            </div>
+            <button onclick="adminLogin()">Login</button>
+        </div>
+    </div>
+
+    <!-- Context Menu -->
+    <div class="window" id="context-menu" style="display: none; position: fixed;">
+        <div class="window-body">
+            <menu role="menu">
+                <li role="menuitem"><button onclick="muteUser()">Mute User</button></li>
+                <li role="menuitem"><button onclick="kickUser()">Kick User</button></li>
+                <li role="menuitem"><button onclick="banUser()">Ban User</button></li>
+            </menu>
+        </div>
+    </div>
+
+    <!-- Disconnect Window -->
+    <div class="window disconnect-window" id="disconnect-window" style="display: none;">
+        <div class="title-bar">
+            <div class="title-bar-text">Disconnect User</div>
+            <div class="title-bar-controls">
+                <button aria-label="Close" onclick="closeDisconnectWindow()"></button>
+            </div>
+        </div>
+        <div class="window-body">
+            <div class="field-row">
+                <label>Type:</label>
+                <select id="disconnect-type" onchange="toggleBanOptions()">
+                    <option value="general">General</option>
+                    <option value="kick">Kick</option>
+                    <option value="ban">Ban</option>
+                </select>
+            </div>
+            <div class="ban-options" id="ban-options">
+                <div class="field-row">
+                    <label>Reason:</label>
+                    <input type="text" id="ban-reason">
+                </div>
+                <div class="field-row">
+                    <label>Length (hours):</label>
+                    <input type="number" id="ban-length" min="1">
+                </div>
+            </div>
+            <button onclick="executeDisconnect()">Confirm</button>
+        </div>
+    </div>
+
     <script src="window.js"></script>
     <script src="msagent.js"></script>
     <script src="script.js"></script>
 </body>
-</html> 
+</html>

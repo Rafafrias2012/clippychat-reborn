@@ -2,6 +2,8 @@ let socket;
 let stage;
 let agents = new Map();
 let currentUser;
+let isAdmin = false;
+let selectedUser = null;
 
 function makeDraggable(element) {
     const titleBar = element.querySelector('.title-bar');
@@ -190,6 +192,129 @@ function setupSocketListeners() {
             }, 1000); // Match this with your leave animation duration
         }
     });
+
+    socket.on('user_muted', (data) => {
+        showError(`User ${data.username} has been muted`);
+    });
+
+    socket.on('user_kicked', (data) => {
+        showError(`User ${data.username} has been kicked`);
+    });
+
+    socket.on('user_banned', (data) => {
+        showError(`User ${data.username} has been banned`);
+    });
 }
 
-window.onload = init; 
+function showContextMenu(e, userId) {
+    e.preventDefault();
+    if (!isAdmin) return;
+
+    const contextMenu = document.getElementById('context-menu');
+    contextMenu.style.display = 'block';
+    contextMenu.style.left = e.pageX + 'px';
+    contextMenu.style.top = e.pageY + 'px';
+    selectedUser = userId;
+}
+
+function hideContextMenu() {
+    document.getElementById('context-menu').style.display = 'none';
+}
+
+function toggleChatLog() {
+    const chatLog = document.getElementById('chat-log-window');
+    chatLog.style.display = chatLog.style.display === 'none' ? 'block' : 'none';
+}
+
+function toggleAdminLogin() {
+    const adminLogin = document.getElementById('admin-login-window');
+    adminLogin.style.display = adminLogin.style.display === 'none' ? 'block' : 'none';
+}
+
+function adminLogin() {
+    const password = document.getElementById('admin-password').value;
+    if (password === '@Rafael2012') {
+        isAdmin = true;
+        document.getElementById('admin-login-window').style.display = 'none';
+        currentUser.isAdmin = true;
+        socket.emit('admin_login', { userId: currentUser.id });
+        showError('Admin login successful');
+    } else {
+        showError('Invalid admin password');
+    }
+}
+
+function muteUser() {
+    if (!isAdmin || !selectedUser) return;
+    socket.emit('mute_user', { userId: selectedUser });
+    hideContextMenu();
+}
+
+function kickUser() {
+    if (!isAdmin || !selectedUser) return;
+    showDisconnectWindow('kick');
+}
+
+function banUser() {
+    if (!isAdmin || !selectedUser) return;
+    showDisconnectWindow('ban');
+}
+
+function showDisconnectWindow(type) {
+    const disconnectWindow = document.getElementById('disconnect-window');
+    document.getElementById('disconnect-type').value = type;
+    toggleBanOptions();
+    disconnectWindow.style.display = 'block';
+    hideContextMenu();
+}
+
+function closeDisconnectWindow() {
+    document.getElementById('disconnect-window').style.display = 'none';
+}
+
+function toggleBanOptions() {
+    const type = document.getElementById('disconnect-type').value;
+    const banOptions = document.getElementById('ban-options');
+    banOptions.style.display = type === 'ban' ? 'block' : 'none';
+}
+
+function executeDisconnect() {
+    if (!isAdmin || !selectedUser) return;
+
+    const type = document.getElementById('disconnect-type').value;
+    const reason = document.getElementById('ban-reason').value;
+    const length = parseInt(document.getElementById('ban-length').value);
+
+    switch (type) {
+        case 'kick':
+            socket.emit('kick_user', { userId: selectedUser, reason });
+            break;
+        case 'ban':
+            socket.emit('ban_user', { userId: selectedUser, reason, length });
+            break;
+        case 'general':
+            socket.emit('disconnect_user', { userId: selectedUser });
+            break;
+    }
+
+    closeDisconnectWindow();
+}
+
+// Add event listeners
+document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('#context-menu')) {
+            hideContextMenu();
+        }
+    });
+
+    document.getElementById('chat-log-btn').addEventListener('click', toggleChatLog);
+    document.getElementById('admin-login-btn').addEventListener('click', toggleAdminLogin);
+
+    // Make windows draggable
+    makeDraggable(document.getElementById('chat-log-window'));
+    makeDraggable(document.getElementById('admin-login-window'));
+    makeDraggable(document.getElementById('disconnect-window'));
+});
+
+window.onload = init;

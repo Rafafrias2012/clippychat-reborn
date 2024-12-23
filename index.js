@@ -16,14 +16,25 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// Store active rooms
+// Store active rooms and banned users
 const rooms = new Map();
+const bannedUsers = new Map();
+const mutedUsers = new Set();
 
 io.on('connection', (socket) => {
     let user;
     let currentRoom;
 
     socket.on('login', (data) => {
+        // Check if user is banned
+        const ipAddress = socket.handshake.address;
+        const banInfo = bannedUsers.get(ipAddress);
+        if (banInfo && Date.now() < banInfo.expiry) {
+            socket.emit('error', { message: `You are banned. Reason: ${banInfo.reason}` });
+            socket.disconnect();
+            return;
+        }
+
         // Update to handle object with nickname and agentType
         const nickname = typeof data === 'object' ? data.nickname : data;
         let agentType = typeof data === 'object' ? data.agentType : null;
@@ -38,7 +49,9 @@ io.on('connection', (socket) => {
             nickname: nickname,
             agentType: agentType,
             x: Math.random() * 500,
-            y: Math.random() * 500
+            y: Math.random() * 500,
+            isAdmin: false,
+            ip: ipAddress
         };
 
         socket.emit('login_success', user);
@@ -91,6 +104,12 @@ io.on('connection', (socket) => {
     socket.on('chat_message', (message) => {
         if (!user || !currentRoom) return;
 
+        // Check if user is muted
+        if (mutedUsers.has(socket.id)) {
+            socket.emit('error', { message: 'You are muted and cannot send messages.' });
+            return;
+        }
+
         if (message.startsWith('/')) {
             const cmd = new Commands(socket, user, currentRoom);
             if (cmd.handleCommand(message)) {
@@ -100,7 +119,8 @@ io.on('connection', (socket) => {
 
         io.to(currentRoom.name).emit('chat_message', {
             user: user,
-            message: message
+            message: message,
+            timestamp: new Date().toISOString()
         });
     });
 
@@ -118,6 +138,53 @@ io.on('connection', (socket) => {
             id: user.id,
             agentType: newAgent
         });
+    });
+
+    // Admin features
+    socket.on('admin_login', (data) => {
+        if (user && user.id === data.userId) {
+            user.isAdmin = true;
+        }
+    });
+
+    socket.on('mute_user', (data) => {
+        if (!user || !user.isAdmin) return;
+        const targetSocket = io.sockets.sockets.get(data.userId);
+        if (targetSocket) {
+            mutedUsers.add(data.userId);
+            io.to(currentRoom.name).emit('user_muted', {
+                username: targetSocket.user ? targetSocket.user.nickname : data.userId
+            });
+        }
+    });
+
+    socket.on('kick_user', (data) => {
+        if (!user || !user.isAdmin) return;
+        const targetSocket = io.sockets.sockets.get(data.userId);
+        if (targetSocket) {
+            io.to(currentRoom.name).emit('user_kicked', {
+                username: targetSocket.user ? targetSocket.user.nickname : data.userId
+            });
+            targetSocket.disconnect();
+        }
+    });
+
+    socket.on('ban_user', (data) => {
+        if (!user || !user.isAdmin) return;
+        const targetSocket = io.sockets.sockets.get(data.userId);
+        if (targetSocket) {
+            const targetIp = targetSocket.handshake.address;
+            const expiry = Date.now() + (data.length * 60 * 60 * 1000); // Convert hours to milliseconds
+            bannedUsers.set(targetIp, {
+                reason: data.reason,
+                expiry: expiry
+            });
+
+            io.to(currentRoom.name).emit('user_banned', {
+                username: targetSocket.user ? targetSocket.user.nickname : data.userId
+            });
+            targetSocket.disconnect();
+        }
     });
 
     socket.on('disconnect', () => {

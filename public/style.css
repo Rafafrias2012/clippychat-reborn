@@ -144,3 +144,61 @@ body {
     z-index: 1000;
     display: none;
 }
+
+.menu-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 30px;
+    background: #c0c0c0;
+    border-bottom: 1px solid #000;
+    z-index: 100;
+    padding: 2px 5px;
+}
+
+.menu-btn {
+    min-width: 30px;
+    height: 24px;
+    margin: 2px;
+}
+
+#chat-log-window {
+    position: fixed;
+    top: 40px;
+    left: 10px;
+    width: 300px;
+    height: 500px;
+}
+
+#chat-log-content {
+    height: 450px;
+    overflow-y: auto;
+}
+
+#admin-login-window {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 300px;
+}
+
+.admin-name {
+    color: red !important;
+}
+
+#context-menu {
+    z-index: 1000;
+}
+
+#context-menu menu {
+    padding: 2px;
+    margin: 0;
+}
+
+#context-menu button {
+    width: 100%;
+    text-align: left;
+    margin: 1px 0;
+}
